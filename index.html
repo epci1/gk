@@ -11,19 +11,38 @@
         <!-- This script tag bootstraps PyScript -->
         <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 
-        <title>PyScript Hello World</title>
+        <!-- will be set via PyDom -->
     </head>
 
     <body>
+
+        <!-- will be set via PyDom -->
+        <div id="pandas-source">
+            <h3>Data Source</h3>
+            <input type="text" id="txt-url" class="py-input" size="70" />
+            <button
+                type="submit"
+                id="btn-load"
+                class="py-button"
+                py-click="loadFromURL"
+            >
+                Load CSV
+            </button>
+        </div>
+
+        <div id="pandas-output" hidden>
+            <h3>Output</h3>
+            <div id="pandas-output-inner"></div>
+        </div>
+
+        <div id="pandas-dev-console" hidden>
+            <h3>Dev Console</h3>
+            <script type="py" terminal></script>
+        </div>
+
         <section class="pyscript">
-            Hello world! <br />
-            This is the current date and time, as computed by Python:
-            <script type="py">
-                from pyscript import display
-                from datetime import datetime
-                now = datetime.now()
-                display(now.strftime("%m/%d/%Y, %H:%M:%S"))
-            </script>
+            <script type="py" src="./main.py" config="./pyscript.toml"></script>
         </section>
+
     </body>
 </html>
