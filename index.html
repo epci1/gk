@@ -1,48 +1,110 @@
-<!doctype html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rotating ASCII Cubes</title>
+  <style>
+    body {
+      background: black;
+      color: white;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    pre {
+      font-size: 10px;
+      line-height: 10px;
+      white-space: pre;
+      margin: 0;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <pre id="screen"></pre>
 
-<html>
-    <head>
-        <!-- Recommended meta tags -->
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script>
+    const width = 160;
+    const height = 44;
+    const K1 = 40;
+    const distanceFromCam = 100;
+    const backgroundChar = '.';
+    let A = 0, B = 0, C = 0;
 
-        <!-- PyScript CSS -->
-        <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-        <!-- This script tag bootstraps PyScript -->
-        <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    const screen = document.getElementById("screen");
 
-        <!-- will be set via PyDom -->
-    </head>
+    function calculateX(i, j, k) {
+      return j * Math.sin(A) * Math.sin(B) * Math.cos(C) -
+             k * Math.cos(A) * Math.sin(B) * Math.cos(C) +
+             j * Math.cos(A) * Math.sin(C) +
+             k * Math.sin(A) * Math.sin(C) +
+             i * Math.cos(B) * Math.cos(C);
+    }
 
-    <body>
+    function calculateY(i, j, k) {
+      return j * Math.cos(A) * Math.cos(C) +
+             k * Math.sin(A) * Math.cos(C) -
+             j * Math.sin(A) * Math.sin(B) * Math.sin(C) +
+             k * Math.cos(A) * Math.sin(B) * Math.sin(C) -
+             i * Math.cos(B) * Math.sin(C);
+    }
 
-        <!-- will be set via PyDom -->
-        <div id="pandas-source">
-            <h3>Data Source</h3>
-            <input type="text" id="txt-url" class="py-input" size="70" />
-            <button
-                type="submit"
-                id="btn-load"
-                class="py-button"
-                py-click="loadFromURL"
-            >
-                Load CSV
-            </button>
-        </div>
+    function calculateZ(i, j, k) {
+      return k * Math.cos(A) * Math.cos(B) -
+             j * Math.sin(A) * Math.cos(B) +
+             i * Math.sin(B);
+    }
 
-        <div id="pandas-output" hidden>
-            <h3>Output</h3>
-            <div id="pandas-output-inner"></div>
-        </div>
+    function renderFrame() {
+      const buffer = new Array(width * height).fill(backgroundChar);
+      const zBuffer = new Array(width * height).fill(0);
 
-        <div id="pandas-dev-console" hidden>
-            <h3>Dev Console</h3>
-            <script type="py" terminal></script>
-        </div>
+      const drawCube = (cubeWidth, horizontalOffset, char) => {
+        for (let cubeX = -cubeWidth; cubeX < cubeWidth; cubeX += 0.6) {
+          for (let cubeY = -cubeWidth; cubeY < cubeWidth; cubeY += 0.6) {
+            const faces = [
+              [cubeX, cubeY, -cubeWidth],
+              [cubeWidth, cubeY, cubeX],
+              [-cubeWidth, cubeY, -cubeX],
+              [-cubeX, cubeY, cubeWidth],
+              [cubeX, -cubeWidth, -cubeY],
+              [cubeX, cubeWidth, cubeY]
+            ];
 
-        <section class="pyscript">
-            <script type="py" src="./main.py" config="./pyscript.toml"></script>
-        </section>
+            for (let [x_, y_, z_] of faces) {
+              const x = calculateX(x_, y_, z_);
+              const y = calculateY(x_, y_, z_);
+              const z = calculateZ(x_, y_, z_) + distanceFromCam;
 
-    </body>
+              const ooz = 1 / z;
+              const xp = Math.floor(width / 2 + horizontalOffset + K1 * ooz * x * 2);
+              const yp = Math.floor(height / 2 + K1 * ooz * y);
+              const idx = xp + yp * width;
+
+              if (idx >= 0 && idx < width * height) {
+                if (ooz > zBuffer[idx]) {
+                  zBuffer[idx] = ooz;
+                  buffer[idx] = char;
+                }
+              }
+            }
+          }
+        }
+      };
+
+      drawCube(20, -40, '@');
+      drawCube(10, 10, '#');
+      drawCube(5, 70, '+');
+
+      screen.textContent = buffer.map((c, i) => (i % width === 0 ? '\n' : '') + c).join('');
+
+      A += 0.05;
+      B += 0.05;
+      C += 0.01;
+    }
+
+    setInterval(renderFrame, 50);
+  </script>
+</body>
 </html>
